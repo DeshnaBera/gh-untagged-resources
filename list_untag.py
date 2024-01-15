@@ -9,3 +9,5 @@ def list_untagged_lambda_functions():
         if 'Tags' not in tags:
             untagged_functions.append(function['FunctionName'])
     return untagged_functions
+    
+print(untagged_functions)
