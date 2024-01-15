@@ -8,14 +8,14 @@ def list_untagged_resources(resource_type, aws_access_key_id, aws_secret_access_
    )
    untagged_resources = []
    # Add logic to fetch resources without tags for each resource type
-   if resource_type == 's3':
-       # Sample logic for S3
-       buckets = client.list_buckets()['Buckets']
-       for bucket in buckets:
-           tags = client.get_bucket_tagging(Bucket=bucket['Name']).get('TagSet', [])
-           if not tags:
-               untagged_resources.append({'Type': 'S3 Bucket', 'Name': bucket['Name']})
-   elif resource_type == 'lambda':
+#    if resource_type == 's3':
+#        # Sample logic for S3
+#        buckets = client.list_buckets()['Buckets']
+#        for bucket in buckets:
+#            tags = client.get_bucket_tagging(Bucket=bucket['Name']).get('TagSet', [])
+#            if not tags:
+#                untagged_resources.append({'Type': 'S3 Bucket', 'Name': bucket['Name']})
+   if resource_type == 'lambda':
        # Sample logic for Lambda
        functions = client.list_functions()['Functions']
        for function in functions:
