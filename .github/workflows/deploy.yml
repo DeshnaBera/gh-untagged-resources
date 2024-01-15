@@ -29,19 +29,21 @@ jobs:
           pip install boto3
 
       - name: Run script
-        run: python list_untag.py
+        run: |
+          python list_untag.py
+          cat untagged_lambda.txt
 
       - name: Create CSV report
         run: |
-          echo "Bucket Name" > untagged_s3_buckets.csv
-          cat untagged_s3_buckets.txt >> untagged_s3_buckets.csv
+          echo "Lambda Functions" > untagged_lambda.csv
+          cat untagged_lambda.txt >> untagged_lambda.csv
 
       - name: Create summary
         run: |
-          echo "Number of untagged S3 buckets: $(cat untagged_s3_buckets.txt | wc -l)"
+          echo "Number of untagged Lambda Functions: $(cat untagged_lambda | wc -l)"
 
       - name: Upload summary as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: untagged-s3-buckets-summary
-          path: untagged_s3_buckets.txt
+          name: untagged_lambda-summary
+          path: untagged_lambda.txt
