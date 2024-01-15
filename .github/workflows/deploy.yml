@@ -16,12 +16,12 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: us-east-1
 
       - name: Install dependencies
         run: |
@@ -31,17 +31,17 @@ jobs:
       - name: Run script
         run: python list_untag.py
 
-      # - name: Create CSV report
-      #   run: |
-      #     echo "Bucket Name" > untagged_s3_buckets.csv
-      #     cat untagged_s3_buckets.txt >> untagged_s3_buckets.csv
+      - name: Create CSV report
+        run: |
+          echo "Bucket Name" > untagged_s3_buckets.csv
+          cat untagged_s3_buckets.txt >> untagged_s3_buckets.csv
 
-      # - name: Create summary
-      #   run: |
-      #     echo "Number of untagged S3 buckets: $(cat untagged_s3_buckets.txt | wc -l)"
+      - name: Create summary
+        run: |
+          echo "Number of untagged S3 buckets: $(cat untagged_s3_buckets.txt | wc -l)"
 
-      # - name: Upload summary as artifact
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: untagged-s3-buckets-summary
-      #     path: untagged_s3_buckets.txt
+      - name: Upload summary as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: untagged-s3-buckets-summary
+          path: untagged_s3_buckets.txt
