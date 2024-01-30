@@ -1,3 +1,4 @@
+import os
 import boto3
 import botocore
 import csv
@@ -38,11 +39,18 @@ def get_resources_without_tags(service, mandatory_tags, region_name=None):
     return resources
 
 def generate_report(service, resources):
-    with open(f'{service}_report.csv', 'w', newline='') as file:
+    file_exists = os.path.isfile(f'{service}_report.csv')
+   
+    with open(f'{service}_report.csv', 'a', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(["Resource Name", "Region"])
+       
+        # If the file didn't exist before, write the header
+        if not file_exists:
+            writer.writerow(["Resource Name", "Region"])
+       
         for resource in resources:
             writer.writerow(resource)
+
 
 def main():
     services = ['s3', 'lambda', 'dynamodb']
@@ -59,6 +67,6 @@ def main():
                 resources = get_resources_without_tags(service, mandatory_tags, region_name)
                 generate_report(service, resources)
                 print(f'For {service} in {region_name}, {len(resources)} resources do not have the mandatory tags')
-
+                resources.clear()  # Clear the resources list
 if __name__ == "__main__":
     main()
