@@ -1,42 +1,51 @@
 import boto3
-def list_untagged_resources(resource_type, aws_access_key_id, aws_secret_access_key, region):
-   client = boto3.client(
-       resource_type,
-       aws_access_key_id=aws_access_key_id,
-       aws_secret_access_key=aws_secret_access_key,
-       region_name=region
-   )
-   untagged_resources = []
-   # Add logic to fetch resources without tags for each resource type
-#    if resource_type == 's3':
-#        # Sample logic for S3
-#        buckets = client.list_buckets()['Buckets']
-#        for bucket in buckets:
-#            tags = client.get_bucket_tagging(Bucket=bucket['Name']).get('TagSet', [])
-#            if not tags:
-#                untagged_resources.append({'Type': 'S3 Bucket', 'Name': bucket['Name']})
-   if resource_type == 'lambda':
-       # Sample logic for Lambda
-       functions = client.list_functions()['Functions']
-       for function in functions:
-           tags = client.list_tags(Resource=function['FunctionArn']).get('Tags', {})
-           if not tags:
-               untagged_resources.append({'Type': 'Lambda Function', 'Name': function['FunctionName']})
-   elif resource_type == 'dynamodb':
-       # Sample logic for DynamoDB
-       tables = client.list_tables()['TableNames']
-       for table in tables:
-           tags = client.list_tags_of_resource(ResourceArn=f'arn:aws:dynamodb:{region}:{aws_access_key_id}:table/{table}').get('Tags', {})
-           if not tags:
-               untagged_resources.append({'Type': 'DynamoDB Table', 'Name': table})
-   return untagged_resources
-# Example usage
-aws_access_key_id = 'AKIAXCMHLBE24P6BZKOI'
-aws_secret_access_key = 'qfmMlzvBMRRz0aM0buQ2cEICl2PMur80d8Q2LYZc'
-region = 'us-east-1'
-untagged_s3 = list_untagged_resources('s3', aws_access_key_id, aws_secret_access_key, region)
-untagged_lambda = list_untagged_resources('lambda', aws_access_key_id, aws_secret_access_key, region)
-untagged_dynamodb = list_untagged_resources('dynamodb', aws_access_key_id, aws_secret_access_key, region)
-print("Untagged S3 Buckets:", untagged_s3)
-print("Untagged Lambdas:", untagged_lambda)
-print("Untagged DynamoDB Tables:", untagged_dynamodb)
+import botocore
+import csv
+ 
+def get_resources_without_tags(service, mandatory_tags):
+    client = boto3.client(service)
+    resources = []
+    if service == 's3':
+        response = client.list_buckets()
+        for bucket in response['Buckets']:
+            try:
+                bucket_tagging = client.get_bucket_tagging(Bucket=bucket['Name'])
+                bucket_tags = set(tag['Key'] for tag in bucket_tagging['TagSet'])
+                if not set(mandatory_tags).issubset(bucket_tags):
+                    resources.append(bucket['Name'])
+            except botocore.exceptions.ClientError as e:
+                # if e.response['Error']['Code'] == 'NoSuchTagSet':
+                resources.append(bucket['Name'])
+                # else:
+                #     raise
+    elif service == 'lambda':
+        response = client.list_functions()
+        for function in response['Functions']:
+            function_tags = client.list_tags(Resource=function['FunctionArn'])
+            if not set(mandatory_tags).issubset(function_tags['Tags']):
+                resources.append(function['FunctionName'])
+    # elif service == 'dynamodb':
+    #     response = client.list_tables()
+    #     for table in response['TableNames']:
+    #         table_tags = client.list_tags_of_resource(ResourceArn=table)
+    #         if not set(mandatory_tags).issubset(table_tags['Tags']):
+    #             resources.append(table)
+    return resources
+ 
+def generate_report(service, resources):
+    with open(f'{service}_report.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Resource Name"])
+        for resource in resources:
+            writer.writerow([resource])
+ 
+def main():
+    services = ['s3', 'lambda', 'dynamodb']
+    mandatory_tags = ['Name']
+    for service in services:
+        resources = get_resources_without_tags(service, mandatory_tags)
+        generate_report(service, resources)
+        print(f'For {service}, {len(resources)} resources do not have the mandatory tags')
+ 
+if __name__ == "__main__":
+    main()

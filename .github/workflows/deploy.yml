@@ -1,49 +1,31 @@
-name: List Untagged Resources
-
-on: push
+name: Check AWS Resources
+on:
+  push
   # schedule:
-  #   - cron: '0 0 * * 0' # Run every Sunday at midnight UTC
-
+  #   - cron: '0 0 * * 0'  # This will run the workflow every Sunday at midnight
+  # workflow_dispatch:  # This allows the workflow to be run manually
+ 
 jobs:
-  list-untagged-s3-buckets:
+  check-resources:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
-
-      # - name: Configure AWS Credentials
-      #   uses: aws-actions/configure-aws-credentials@v4
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: us-east-1
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install boto3
-
-      - name: Run script
-        run: |
-          python list_untag.py
-          cat untagged_lambda.txt
-
-      - name: Create CSV report
-        run: |
-          echo "Lambda Functions" > untagged_lambda.csv
-          cat untagged_lambda.txt >> untagged_lambda.csv
-
-      - name: Create summary
-        run: |
-          echo "Number of untagged Lambda Functions: $(cat untagged_lambda | wc -l)"
-
-      - name: Upload summary as artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: untagged_lambda-summary
-          path: untagged_lambda.txt
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install boto3
+    - name: Run script
+      run: python list_untag.py
+    - name: Upload report
+      uses: actions/upload-artifact@v4
+      with:
+        name: reports
+        path: |
+          s3_report.csv
+          lambda_report.csv
+          dynamodb_report.csv
